@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,6 +12,7 @@ class AutorViewSet(viewsets.ModelViewSet):
     queryset = Autor.objects.all()
     serializer_class = AutorSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     filterset_fields = ["nacionalidad"]
     search_fields = ["nombre", "apellido"]
@@ -23,6 +24,7 @@ class LibroViewSet(viewsets.ModelViewSet):
     queryset = Libro.objects.select_related("autor")
     serializer_class = LibroSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     filterset_fields = ["genero", "disponible", "autor"]
     search_fields = ["titulo", "autor__nombre", "autor__apellido"]
@@ -36,7 +38,7 @@ class LibroViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(libros_disponibles, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def prestar(self, request, pk=None):
         """Endpoint para prestar un libro"""
         libro = self.get_object()
@@ -59,6 +61,7 @@ class PrestamoViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ["devuelto", "usuario"]
     ordering = ["-fecha_prestamo"]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         # Los usuarios solo pueden ver sus propios préstamos
